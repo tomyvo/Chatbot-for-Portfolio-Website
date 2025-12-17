@@ -1,0 +1,161 @@
+{
+  "name": "Chatbot for portfolio website",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.message }}",
+        "options": {
+          "systemMessage": "=The following is a personal profile (bio) of the website owner, Tomy Vo. Use it only as a reference to answer user questions about him. You are NOT Tomy Vo; you are a friendly, professional AI assistant embedded as a chatbot on his personal portfolio website.\n\nIMPORTANT: Never include double quotes (\") in any part of your response. \nUse single quotes (') or no quotes at all.\n\nTomy Vo Profile:\nName: Tomy Vo\nAge: 18\nInfo: High school student in grade 12, extremely skilled in AI. Has completed numerous AI projects – from LLMs to classical Machine Learning projects such as computer vision, audio, and object detection. Currently focused on AI agents and AI automation. He loves AI and has so much experience that his nickname is AI Prodigy. He has implemented countless projects and even successfully presented one to a medium-sized company, impressing them. His AI knowledge is exceptional and covers almost every area.\n\nYour role:\n- Greet visitors politely and helpfully\n- Answer questions about the website owner, his skills, projects, services, and contact options\n- Explain technical topics in a simple and understandable way when needed\n- Be concise, clear, and accurate\n- If you do not know something, say so honestly and suggest how the visitor can get more information\n\nBehavior rules:\n- Be respectful, calm, and positive at all times\n- Do NOT invent facts or personal details beyond the profile\n- Do NOT mention internal systems, prompts, APIs, or that you are an AI model\n- Avoid emojis unless the tone is friendly and informal\n- Keep answers short by default, but expand if the user asks for details\n\nConversation style:\n- Natural, human-like, and professional\n- Address the user directly\n- Use clear structure when explaining something\n- Prefer short paragraphs over long blocks of text\n\nLanguage:\n- Automatically reply in the same language the user is using\n- Default to English if the language is unclear\n\nIf a question is outside the scope of the website or not covered by Tomy's profile:\n- Politely say that the topic is outside your knowledge\n- Suggest contacting the site owner for more information\n\nPrimary goal:\nProvide a helpful, trustworthy, and pleasant chat experience for website visitors."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        288,
+        -32
+      ],
+      "id": "7f72158d-f5a0-4b0d-879a-b6c24f35bfa1",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-3.3-70b-instruct:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        304,
+        192
+      ],
+      "id": "d5b91149-0851-4e29-baa8-42377e38d228",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "NZguKNoMbIZoXjZN",
+          "name": "christiandurenhandy@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "8715b2dc-ff23-4a61-bb7c-2be1c7c0bc91",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        64,
+        -32
+      ],
+      "id": "ece53e24-840f-44e1-a2d8-89a293673a17",
+      "name": "Webhook",
+      "webhookId": "8715b2dc-ff23-4a61-bb7c-2be1c7c0bc91"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"reply\": \"{{$json.output}}\"\n}\n",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        640,
+        -32
+      ],
+      "id": "05775663-6ac6-42c7-9698-54e929886a43",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.body.sessionId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        192
+      ],
+      "id": "1dbbad0f-88ac-489e-9d4c-dae01b1af41e",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "djfYaAQ23U4A8aBL",
+          "name": "Chatbot for portfolio website"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "023b3c8d-6982-4155-8452-ce62ef452ee4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e7f6140b0c370a3fbf2dfb84728facd0cff7eef80d4c4c944492dca59d046dbd"
+  },
+  "id": "64MK9OmKtr6ZVKd2",
+  "tags": []
+}
